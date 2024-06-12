@@ -76,7 +76,7 @@ public:
     }
 
     std::string GetText() const override {
-        return std::string('=' + formula_->GetExpression());
+        return std::string(FORMULA_SIGN + formula_->GetExpression());
     }
 
     std::vector<Position> GetReferencedCells() const override {
@@ -100,22 +100,27 @@ void Cell::Set(std::string text) {
     }
 
     if (text.empty()) {
-        Clear();
-        return;
+        impl_ = std::make_unique<EmptyImpl>();
+        ClearDependencies();
     } else if (text[0] == FORMULA_SIGN && text.size() > 1) {
         text.erase(text.begin());
-        SetFormulaImpl(std::move(text));
+        std::unique_ptr<Impl> formula_impl = std::make_unique<FormulaImpl>(std::move(text));
+        std::vector<Position> ref_cells_pos = formula_impl->GetReferencedCells();
+
+        CheckCyclicDependencies(this, ref_cells_pos);
+
+        impl_ = std::move(formula_impl);
+
+        SetDependencies(ref_cells_pos);
     } else {
         impl_ = std::make_unique<TextImpl>(std::move(text));
-        ClearDependancies();
+        ClearDependencies();
     }
     ResetCache();
 }
 
 void Cell::Clear() {
-    impl_ = std::make_unique<EmptyImpl>();
-    ResetCache();
-    ClearDependancies();
+    Set("");
 }
 
 CellInterface::Value Cell::GetValue() const {
@@ -134,11 +139,7 @@ std::vector<Position> Cell::GetReferencedCells() const {
 }
 
 bool Cell::IsReferenced() const {
-    if (!references_from_.empty()) {
-        return true;
-    } else {
-        return false;
-    }
+    return !references_from_.empty();
 }
 
 void Cell::SetReference(Cell* referenced_cell) {
@@ -146,7 +147,7 @@ void Cell::SetReference(Cell* referenced_cell) {
     referenced_cell->references_from_.insert(this);
 }
 
-void Cell::ClearDependancies() {
+void Cell::ClearDependencies() {
     if (!references_to_.empty()) {
         for (Cell* ref_cell : references_to_) {
             ref_cell->references_from_.erase(this);
@@ -155,14 +156,9 @@ void Cell::ClearDependancies() {
     }
 }
 
-void Cell::SetFormulaImpl(std::string text) {
-    std::unique_ptr<Impl> formula_impl = std::make_unique<FormulaImpl>(std::move(text));
-    std::vector<Position> ref_cells_pos = formula_impl->GetReferencedCells();
-
-    CheckCyclicDependencies(this, ref_cells_pos);
-
-    ClearDependancies();
-    for (Position& pos : ref_cells_pos) {
+void Cell::SetDependencies(const std::vector<Position>& ref_cells_pos) {
+    ClearDependencies();
+    for (const Position& pos : ref_cells_pos) {
         auto cell = sheet_.GetCell(pos);
         if (!cell) {
             sheet_.SetCell(pos, {});
@@ -170,8 +166,6 @@ void Cell::SetFormulaImpl(std::string text) {
         }
         SetReference(static_cast<Cell*>(cell));
     }
-
-    impl_ = std::move(formula_impl);
 }
 
 void Cell::ResetCache() {

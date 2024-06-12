@@ -6,6 +6,7 @@
 #include <functional>
 #include <optional>
 #include <unordered_set>
+#include <vector>
 
 class Sheet;
 
@@ -37,8 +38,8 @@ private:
     SheetInterface& sheet_;
 
     void SetReference(Cell* referenced_cell);
-    void ClearDependancies();
-    void SetFormulaImpl(std::string text);
+    void ClearDependencies();
+    void SetDependencies(const std::vector<Position>& ref_cells_pos);
     void ResetCache();
     void ResetCache(std::unordered_set<Cell*>& used);
 

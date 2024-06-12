@@ -145,46 +145,33 @@ public:
     double Evaluate(const SheetInterface& sheet) const override {
         double lhs_value = lhs_->Evaluate(sheet);
         double rhs_value = rhs_->Evaluate(sheet);
+        double result;
         switch (type_) {
-            case Type::Add: {
-                if (std::isfinite(lhs_value + rhs_value)) {
-                    return lhs_value + rhs_value;
-                } else {
-                    throw FormulaError(FormulaError::Category::Arithmetic);
-                }
+            case Type::Add:
+                result = lhs_value + rhs_value;
                 break;
-            }
 
-            case Type::Subtract: {
-                if (std::isfinite(lhs_value - rhs_value)) {
-                    return lhs_value - rhs_value;
-                } else {
-                    throw FormulaError(FormulaError::Category::Arithmetic);
-                }
+            case Type::Subtract: 
+                result = lhs_value - rhs_value;
                 break;
-            }
 
-            case Type::Multiply: {
-                if (std::isfinite(lhs_value * rhs_value)) {
-                    return lhs_value * rhs_value;
-                } else {
-                    throw FormulaError(FormulaError::Category::Arithmetic);
-                }
+            case Type::Multiply: 
+                result = lhs_value * rhs_value;
                 break;
-            }
 
-            case Type::Divide: {
-                if (std::isfinite(lhs_value / rhs_value)) {
-                    return lhs_value / rhs_value;
-                } else {
-                    throw FormulaError(FormulaError::Category::Arithmetic);
-                }
+            case Type::Divide: 
+                result = lhs_value / rhs_value;
                 break;
-            }
 
             default:
                 throw FormulaError(FormulaError::Category::Arithmetic);
                 break;
+        }
+
+        if (std::isfinite(result)) {
+            return result;
+        } else {
+            throw FormulaError(FormulaError::Category::Arithmetic);
         }
     }
 
