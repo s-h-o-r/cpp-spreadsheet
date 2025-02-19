@@ -4,7 +4,6 @@
 ## Технологии
 - [С++17](https://en.cppreference.com/w/cpp/17)
 - [ANTLR](https://github.com/antlr/antlr4)
-- Сборка [Cmake](https://cmake.org/)
 
 ## Тестирование
 В данном проекте не были использованы фреймворки тестирования. Все модульные тесты функционала содержаться в файле [main.cpp](https://github.com/s-h-o-r/cpp-spreadsheet/blob/main/spreadsheet/main.cpp). 
